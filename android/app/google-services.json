@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "120282231499",
+    "project_id": "temletpro",
+    "storage_bucket": "temletpro.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:120282231499:android:2e5c49c6adc21b3ffa214e",
+        "android_client_info": {
+          "package_name": "com.example.rough"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "120282231499-65270k1bfm0nslm129nagtf7kr37m90a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.rough",
+            "certificate_hash": "d26a13ed507831da0aa9b2d3492e2940726d040a"
+          }
+        },
+        {
+          "client_id": "120282231499-desjtsf64tma76iie13iboh35qdcsprb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvCyxcohKyoOcqOBCZ6SA87QVInjsFSC8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "120282231499-desjtsf64tma76iie13iboh35qdcsprb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,2 @@
+D:/My Work/flutter Projects/Easy mail/rough/android/app/.cxx/Debug/6q584ji6/x86_64/CMakeFiles/edit_cache.dir
+D:/My Work/flutter Projects/Easy mail/rough/android/app/.cxx/Debug/6q584ji6/x86_64/CMakeFiles/rebuild_cache.dir

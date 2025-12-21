@@ -1,0 +1,2 @@
+D:/My Work/rough/rough/android/app/.cxx/RelWithDebInfo/1vtm6z1a/x86_64/CMakeFiles/edit_cache.dir
+D:/My Work/rough/rough/android/app/.cxx/RelWithDebInfo/1vtm6z1a/x86_64/CMakeFiles/rebuild_cache.dir
