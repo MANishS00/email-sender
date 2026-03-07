@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:rough/main.dart';
+import 'package:rough/version/version.dart';
 import 'auth service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -27,8 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<User?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn(
-        clientId:
-            '120282231499-desjtsf64tma76iie13iboh35qdcsprb.apps.googleusercontent.com',
+        clientId: '120282231499-de com',
         scopes: ['email', 'profile'],
       ).signIn();
 
@@ -67,6 +68,17 @@ class _LoginScreenState extends State<LoginScreen> {
               ElevatedButton(
                 onPressed: signInWithGoogle,
                 child: const Text('Sign In with Google'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VersionScreen(),
+                    ),
+                  );
+                },
+                child: const Text('Click me'),
               ),
               if (_error.isNotEmpty)
                 Padding(
