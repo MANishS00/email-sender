@@ -49,38 +49,60 @@ class _EmailEditScreenState extends State<EmailEditScreen> {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf'],
+        allowedExtensions: ['pdf', 'doc', 'docx', 'txt', 'jpg', 'jpeg', 'png'],
         allowMultiple: false,
       );
 
       if (result != null) {
-        // Get app's documents directory
-        final Directory appDir = await getApplicationDocumentsDirectory();
-        final String fileName = 'email_attachment_${DateTime.now().millisecondsSinceEpoch}.pdf';
+        // Get external storage directory (more accessible)
+        Directory appDir;
+        try {
+          // Try external storage first
+          appDir = await getExternalStorageDirectory() ??
+              await getApplicationDocumentsDirectory();
+        } catch (e) {
+          // Fallback to app documents directory
+          appDir = await getApplicationDocumentsDirectory();
+        }
+
+        final String originalFileName = result.files.single.name;
+        final String fileName =
+            'email_attachment_${DateTime.now().millisecondsSinceEpoch}_$originalFileName';
         final String newPath = path.join(appDir.path, fileName);
+
+        debugPrint('Saving file to: $newPath');
+        debugPrint('Directory exists: ${await appDir.exists()}');
 
         // Save the file
         File savedFile;
         if (result.files.single.path != null) {
           savedFile = await File(result.files.single.path!).copy(newPath);
         } else {
-          savedFile = await File(newPath).writeAsBytes(result.files.single.bytes!);
+          savedFile =
+              await File(newPath).writeAsBytes(result.files.single.bytes!);
         }
 
         // Verify file saved successfully
         if (await savedFile.exists()) {
+          final fileSize = await savedFile.length();
+          debugPrint('File saved successfully');
+          debugPrint('File size: $fileSize bytes');
+          debugPrint('File path: $newPath');
+
           setState(() {
             _attachmentFile = savedFile;
             _attachmentPath = newPath;
           });
 
-          // Print debug info
-          debugPrint('File saved at: $newPath');
-          debugPrint('File size: ${savedFile.lengthSync()} bytes');
-
           // Save path to SharedPreferences
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('attachmentPath', newPath);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Attachment saved: $originalFileName')),
+          );
+        } else {
+          throw Exception('File not saved properly');
         }
       }
     } catch (e) {
@@ -91,11 +113,27 @@ class _EmailEditScreenState extends State<EmailEditScreen> {
     }
   }
 
-  void _removeAttachment() {
+  void _removeAttachment() async {
+    if (_attachmentFile != null && await _attachmentFile!.exists()) {
+      try {
+        await _attachmentFile!.delete();
+        debugPrint('Attachment file deleted');
+      } catch (e) {
+        debugPrint('Error deleting file: $e');
+      }
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('attachmentPath');
+
     setState(() {
       _attachmentFile = null;
       _attachmentPath = null;
     });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Attachment removed')),
+    );
   }
 
   @override
@@ -135,23 +173,53 @@ class _EmailEditScreenState extends State<EmailEditScreen> {
                     children: [
                       const Text(
                         'Attachment',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       const SizedBox(height: 8),
                       if (_attachmentFile != null)
                         Column(
                           children: [
-                            Text(path.basename(_attachmentFile!.path)),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.attach_file, size: 16),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    path.basename(_attachmentFile!.path),
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: 8),
+                            Text(
+                              'Size: ${(_attachmentFile!.lengthSync() / 5000).toStringAsFixed(2)} KB',
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.grey),
+                            ),
+                            const SizedBox(height: 12),
                             OutlinedButton(
                               onPressed: _removeAttachment,
                               child: const Text('Remove Attachment'),
                             ),
                           ],
                         ),
-                      OutlinedButton(
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
                         onPressed: _selectFile,
-                        child: const Text('Select PDF File'),
+                        icon: const Icon(Icons.attach_file),
+                        label: const Text('Select Attachment File'),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Supported: PDF, DOC, TXT, JPG, PNG',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
@@ -160,7 +228,20 @@ class _EmailEditScreenState extends State<EmailEditScreen> {
               Padding(
                 padding: const EdgeInsets.all(18.0),
                 child: GestureDetector(
-                  onTap: () {
+                  onTap: () async {
+                    // Verify attachment exists if path is not null
+                    if (_attachmentPath != null) {
+                      final file = File(_attachmentPath!);
+                      if (!await file.exists()) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'Attachment file not found! Please reselect.')),
+                        );
+                        return;
+                      }
+                    }
+
                     Navigator.pop(context, {
                       'subject': _subjectController.text,
                       'body': _bodyController.text,
@@ -173,12 +254,12 @@ class _EmailEditScreenState extends State<EmailEditScreen> {
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.1),
-                          offset: Offset(5, 5),
+                          offset: const Offset(5, 5),
                           blurRadius: 10,
                         ),
                         BoxShadow(
                           color: Colors.white.withOpacity(0.5),
-                          offset: Offset(-5, -5),
+                          offset: const Offset(-5, -5),
                           blurRadius: 10,
                         ),
                       ],
@@ -187,9 +268,10 @@ class _EmailEditScreenState extends State<EmailEditScreen> {
                     ),
                     child: Center(
                         child: Text(
-                          "Save",
-                          style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),
-                        )),
+                      "Save",
+                      style:
+                          TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                    )),
                   ),
                 ),
               ),
